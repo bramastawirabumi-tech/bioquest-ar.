@@ -29,7 +29,7 @@
 <div class="fallback" id="fallback"><div><div style="font-size:42px">📷</div><h2>Starting your AR camera…</h2><p>Allow camera permission, then point the camera at the Hiro marker.</p></div></div>
 <div class="instructions"><h2>🔍 Find the marker</h2><p>Point your camera at the <strong>Hiro marker</strong>. A 3D Biology object should appear when the marker is recognised.</p><p class="status" id="status" style="margin-top:8px">Waiting for camera and marker…</p></div>
 <a-scene embedded vr-mode-ui="enabled: false" renderer="logarithmicDepthBuffer: true; antialias: true; alpha: true" arjs="sourceType: webcam; debugUIEnabled: false; trackingMethod: best;">
-  <a-marker preset="hiro" id="hiroMarker">
+  <a-marker preset="hiro" id="hiroMarker" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
     <a-entity position="0 0.15 0">
       <a-sphere position="0 0.15 0" scale="1.0 0.35 0.55" color="#e77d52" material="roughness: 0.65"></a-sphere>
       <a-torus position="0 0.18 0" rotation="90 0 0" radius="0.38" radius-tubular="0.035" color="#ffe2a8"></a-torus>
@@ -44,7 +44,7 @@
 <script>
 const marker=document.getElementById('hiroMarker'),status=document.getElementById('status'),fallback=document.getElementById('fallback');
 marker.addEventListener('markerFound',()=>{status.textContent='Marker found! Explore the model.';fallback.style.display='none';});
-marker.addEventListener('markerLost',()=>{status.textContent='Marker not visible — point the camera at it.';fallback.style.display='grid';});
+marker.addEventListener('markerLost',()=>{status.textContent='Marker briefly lost — keep it fully visible and hold steady.';fallback.style.display='none';});
 window.addEventListener('load',()=>setTimeout(()=>{if(status.textContent==='Waiting for camera and marker…')status.textContent='If the camera does not start, check browser permission and HTTPS.';},8000));
 </script>
 </body></html>
