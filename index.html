@@ -12,6 +12,15 @@
 .instructions{position:fixed;z-index:10;bottom:18px;left:14px;right:14px;max-width:520px;margin:auto;background:#0b1e35ed;border:1px solid #2a4768;border-radius:16px;padding:14px 16px;box-shadow:0 10px 35px #0005}
 .instructions h2{margin:0 0 7px;font-size:16px}.instructions p{margin:0;color:#d1deee;font-size:13px;line-height:1.5}.status{color:#7df2d0;font-weight:700}
 .fallback{position:fixed;inset:0;display:grid;place-items:center;padding:24px;text-align:center;color:#d1deee;pointer-events:none}.fallback div{max-width:360px}a-scene{position:fixed;inset:0}
+/* Keep the camera feed inside the screen instead of cropping it */
+#arjs-video, video {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  object-fit: contain !important;
+}
 @media(max-width:420px){.brand{font-size:14px}.pill{font-size:10px}}
 </style>
 </head>
