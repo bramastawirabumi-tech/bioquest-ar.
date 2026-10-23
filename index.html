@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BioQuest AR — Mission 01</title>
+<script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+<script src="https://raw.githack.com/AR-js-org/AR.js/3.4.8/aframe/build/aframe-ar.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#071426;color:white}
+.topbar{position:fixed;z-index:10;top:0;left:0;right:0;padding:14px 16px;background:linear-gradient(#071426ef,#07142699);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.brand{font-weight:800}.tag{font-size:11px;color:#a7c2e3;margin-top:4px}.pill{background:#123b3b;color:#7df2d0;padding:7px 10px;border-radius:99px;font-size:11px;white-space:nowrap}
+.instructions{position:fixed;z-index:10;bottom:18px;left:14px;right:14px;max-width:520px;margin:auto;background:#0b1e35ed;border:1px solid #2a4768;border-radius:16px;padding:14px 16px;box-shadow:0 10px 35px #0005}
+.instructions h2{margin:0 0 7px;font-size:16px}.instructions p{margin:0;color:#d1deee;font-size:13px;line-height:1.5}.status{color:#7df2d0;font-weight:700}
+.fallback{position:fixed;inset:0;display:grid;place-items:center;padding:24px;text-align:center;color:#d1deee;pointer-events:none}.fallback div{max-width:360px}a-scene{position:fixed;inset:0}
+/* Keep the camera feed inside the screen instead of cropping it */
+#arjs-video, video {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  object-fit: contain !important;
+}
+@media(max-width:420px){.brand{font-size:14px}.pill{font-size:10px}}
+</style>
+</head>
+<body>
+<div class="topbar"><div><div class="brand">🧬 BioQuest AR</div><div class="tag">Mission 01 · The ATP Crisis</div></div><div class="pill">CAMERA AR PROTOTYPE</div></div>
+<div class="fallback" id="fallback"><div><div style="font-size:42px">📷</div><h2>Starting your AR camera…</h2><p>Allow camera permission, then point the camera at the Hiro marker.</p></div></div>
+<div class="instructions"><h2>🔍 Find the marker</h2><p>Point your camera at the <strong>Hiro marker</strong>. A 3D Biology object should appear when the marker is recognised.</p><p class="status" id="status" style="margin-top:8px">Waiting for camera and marker…</p></div>
+<a-scene embedded vr-mode-ui="enabled: false" renderer="logarithmicDepthBuffer: true; antialias: true; alpha: true" arjs="sourceType: webcam; debugUIEnabled: false; trackingMethod: best;">
+  <a-marker preset="hiro" id="hiroMarker">
+    <a-entity position="0 0.15 0">
+      <a-sphere position="0 0.15 0" scale="1.0 0.35 0.55" color="#e77d52" material="roughness: 0.65"></a-sphere>
+      <a-torus position="0 0.18 0" rotation="90 0 0" radius="0.38" radius-tubular="0.035" color="#ffe2a8"></a-torus>
+      <a-torus position="-0.3 0.18 0.05" rotation="90 0 0" radius="0.23" radius-tubular="0.03" color="#ffe2a8"></a-torus>
+      <a-torus position="0.28 0.18 -0.04" rotation="90 0 0" radius="0.2" radius-tubular="0.03" color="#ffe2a8"></a-torus>
+      <a-text value="MITOCHONDRION" position="0 0.85 0" align="center" color="#ffffff" width="3.5"></a-text>
+      <a-text value="ATP production" position="0 -0.35 0" align="center" color="#b8f7e6" width="2.5"></a-text>
+    </a-entity>
+  </a-marker>
+  <a-entity camera></a-entity>
+</a-scene>
+<script>
+const marker=document.getElementById('hiroMarker'),status=document.getElementById('status'),fallback=document.getElementById('fallback');
+marker.addEventListener('markerFound',()=>{status.textContent='Marker found! Explore the model.';fallback.style.display='none';});
+marker.addEventListener('markerLost',()=>{status.textContent='Marker not visible — point the camera at it.';fallback.style.display='grid';});
+window.addEventListener('load',()=>setTimeout(()=>{if(status.textContent==='Waiting for camera and marker…')status.textContent='If the camera does not start, check browser permission and HTTPS.';},8000));
+</script>
+</body></html>
