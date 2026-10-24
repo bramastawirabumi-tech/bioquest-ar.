@@ -83,23 +83,8 @@
       <a-asset-item id="mitochondrionAsset" src="./mitochondrion.glb"></a-asset-item>
     </a-assets>
     <a-marker id="mitochondrionMarker" preset="hiro" smooth="true" smoothCount="5" smoothTolerance="0.02" smoothThreshold="3">
-      <!-- Model and callouts share the same rotating parent, so anchors track every rotation/tilt. -->
       <a-entity id="mitochondrion" position="0 0.48 0" rotation="0 0 0" gltf-model="#mitochondrionAsset" fit-mitochondrion>
-        <a-entity id="mitochondrionLabels" visible="true">
-          <!-- Callouts are model-relative: their anchor endpoints and label positions rotate/tilt with the mitochondrion. -->
-          <!-- Text uses a bold font and larger scale for readability on a phone; pointer lines use increased line width. -->
-          <a-text value="OUTER MEMBRANE" color="#ffffff" font="https://cdn.aframe.io/fonts/Exo2Bold.fnt" align="center" width="3.2" scale="0.32 0.32 0.32" position="-0.66 0.48 0.42" billboard-text></a-text>
-          <a-entity line="start: 0 0 0; end: 1.02 -0.38 -0.30; color: #ffffff; opacity: 1; linewidth: 5" position="-0.66 0.43 0.40"></a-entity>
 
-          <a-text value="INNER MEMBRANE" color="#8de8ff" font="https://cdn.aframe.io/fonts/Exo2Bold.fnt" align="center" width="3.2" scale="0.32 0.32 0.32" position="-0.66 -0.50 0.42" billboard-text></a-text>
-          <a-entity line="start: 0 0 0; end: 0.37 0.46 -0.20; color: #8de8ff; opacity: 1; linewidth: 5" position="-0.66 -0.44 0.40"></a-entity>
-
-          <a-text value="CRISTAE" color="#ffd18a" font="https://cdn.aframe.io/fonts/Exo2Bold.fnt" align="center" width="1.8" scale="0.32 0.32 0.32" position="0.66 -0.48 0.42" billboard-text></a-text>
-          <a-entity line="start: 0 0 0; end: -0.72 0.53 -0.20; color: #ffd18a; opacity: 1; linewidth: 5" position="0.62 -0.42 0.40"></a-entity>
-
-          <a-text value="MATRIX" color="#ffb6a7" font="https://cdn.aframe.io/fonts/Exo2Bold.fnt" align="center" width="1.8" scale="0.32 0.32 0.32" position="0.66 0.48 0.42" billboard-text></a-text>
-          <a-entity line="start: 0 0 0; end: -0.78 -0.28 -0.25; color: #ffb6a7; opacity: 1; linewidth: 5" position="0.62 0.43 0.40"></a-entity>
-        </a-entity>
       </a-entity>
     </a-marker>
     <a-entity camera></a-entity>
@@ -250,7 +235,7 @@
         start.style.display = 'none';
         label.textContent = 'EVIDENCE FOUND · STATION 1';
         title.textContent = 'Mitochondrion: The ATP Crisis';
-        description.textContent = 'Rotate or tilt the model: its label anchors follow the mitochondrion while the text stays readable.';
+        description.textContent = 'Rotate or tilt the 3D mitochondrion to inspect its membranes and cristae.';
         question.innerHTML = '<strong>Evidence question:</strong> Explain how a greater inner-membrane surface area can support a higher rate of ATP production, if other factors are equal.';
         status.textContent = 'Hiro marker detected — loading the 3D model.';
       });
