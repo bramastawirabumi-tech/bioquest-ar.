@@ -27,6 +27,9 @@
     h1 { font-size:18px; margin:6px 0 7px; }
     p { font-size:13px; line-height:1.45; margin:6px 0; color:#dce8f6; }
     .question { border-top:1px solid #38516b; padding-top:9px; margin-top:9px; }
+    .rotate-controls { display:flex; gap:8px; flex-wrap:wrap; margin:9px 0 6px; }
+    .rotate-controls button { flex:1; min-width:84px; border:1px solid #4c7892; border-radius:10px; padding:9px 10px; background:#17344b; color:#f4fbff; font-weight:700; font-size:12px; touch-action:manipulation; }
+    .rotate-controls button:active { background:#24536b; transform:scale(.98); }
     #status { font-weight:bold; color:#83f0d0; }
     .small { font-size:11px; color:#aec3db; }
     #startMessage { position:fixed; z-index:15; left:50%; top:43%; transform:translate(-50%,-50%); width:calc(100% - 40px); max-width:330px; text-align:center; padding:16px; border-radius:14px; background:rgba(7,22,40,.78); pointer-events:none; }
@@ -62,6 +65,11 @@
     <h1 id="title">Mitochondrion: The ATP Crisis</h1>
     <p id="description">Scan the Hiro marker to reveal the imported 3D mitochondrion model.</p>
     <p class="question" id="question"><strong>Evidence question:</strong> Why does the folding of the inner membrane help mitochondria produce ATP?</p>
+    <div class="rotate-controls" aria-label="Rotate mitochondrion model">
+      <button type="button" id="rotateLeft" aria-label="Rotate mitochondrion left">↶ Rotate left</button>
+      <button type="button" id="rotateRight" aria-label="Rotate mitochondrion right">Rotate right ↷</button>
+      <button type="button" id="resetRotation" aria-label="Reset mitochondrion rotation">Reset view</button>
+    </div>
     <p id="status">Waiting for camera permission…</p>
     <p class="small">Keep the entire black-and-white Hiro marker visible, use even lighting, and move your phone slowly. The camera should remain on while you scan.</p>
   </div>
@@ -170,6 +178,25 @@
       const question = document.getElementById('question');
       const scene = document.querySelector('a-scene');
       const marker = document.getElementById('mitochondrionMarker');
+      const mitochondrion = document.getElementById('mitochondrion');
+      let modelRotationY = 0;
+      function setModelRotation() {
+        // Rotate the imported model only; keep the AR labels upright and readable.
+        mitochondrion.setAttribute('rotation', { x: 0, y: modelRotationY, z: 0 });
+        status.textContent = markerVisible ? 'Model rotated — scan around it to inspect the structures.' : 'Rotation set. Scan the Hiro marker to view the model.';
+      }
+      document.getElementById('rotateLeft').addEventListener('click', () => {
+        modelRotationY -= 30;
+        setModelRotation();
+      });
+      document.getElementById('rotateRight').addEventListener('click', () => {
+        modelRotationY += 30;
+        setModelRotation();
+      });
+      document.getElementById('resetRotation').addEventListener('click', () => {
+        modelRotationY = 0;
+        setModelRotation();
+      });
       let cameraReady = false;
       let markerVisible = false;
       scene.addEventListener('renderstart', () => { status.textContent = 'AR scene loaded. Starting camera…'; });
