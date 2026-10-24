@@ -1,50 +1,127 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BioQuest AR — Mission 01</title>
-<script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
-<script src="https://raw.githack.com/AR-js-org/AR.js/3.4.8/aframe/build/aframe-ar.js"></script>
-<style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#071426;color:white}
-.topbar{position:fixed;z-index:10;top:0;left:0;right:0;padding:14px 16px;background:linear-gradient(#071426ef,#07142699);display:flex;justify-content:space-between;align-items:center;gap:10px}
-.brand{font-weight:800}.tag{font-size:11px;color:#a7c2e3;margin-top:4px}.pill{background:#123b3b;color:#7df2d0;padding:7px 10px;border-radius:99px;font-size:11px;white-space:nowrap}
-.instructions{position:fixed;z-index:10;bottom:18px;left:14px;right:14px;max-width:520px;margin:auto;background:#0b1e35ed;border:1px solid #2a4768;border-radius:16px;padding:14px 16px;box-shadow:0 10px 35px #0005}
-.instructions h2{margin:0 0 7px;font-size:16px}.instructions p{margin:0;color:#d1deee;font-size:13px;line-height:1.5}.status{color:#7df2d0;font-weight:700}
-.fallback{position:fixed;inset:0;display:grid;place-items:center;padding:24px;text-align:center;color:#d1deee;pointer-events:none}.fallback div{max-width:360px}a-scene{position:fixed;inset:0}
-/* Keep the camera feed inside the screen instead of cropping it */
-#arjs-video, video {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  object-fit: contain !important;
-}
-@media(max-width:420px){.brand{font-size:14px}.pill{font-size:10px}}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>BioQuest AR — Mitochondrion Mission</title>
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin:0; width:100%; height:100%; overflow:hidden; background:transparent; font-family:Arial,sans-serif; color:#fff; }
+    body { position:fixed; inset:0; }
+    a-scene { position:fixed; inset:0; width:100%; height:100%; z-index:0; }
+    /* Let AR.js/A-Frame manage the camera video's dimensions to avoid crop/coordinate mismatch. */
+    .header { position:fixed; z-index:10; top:0; left:0; right:0; padding:calc(12px + env(safe-area-inset-top)) 14px 12px; background:linear-gradient(#071426eF,#07142680,transparent); pointer-events:none; }
+    .brand { font-weight:800; font-size:17px; }
+    .sub { margin-top:4px; font-size:12px; color:#c6d8ed; }
+    .panel { position:fixed; z-index:10; left:12px; right:12px; bottom:calc(12px + env(safe-area-inset-bottom)); max-width:560px; margin:auto; max-height:38vh; overflow:auto; padding:14px 15px; border:1px solid #46617e; border-radius:16px; background:rgba(7,22,40,.93); box-shadow:0 8px 28px #0005; }
+    .eyebrow { font-size:10px; letter-spacing:1px; font-weight:bold; color:#83f0d0; }
+    h1 { font-size:18px; margin:6px 0 7px; }
+    p { font-size:13px; line-height:1.45; margin:6px 0; color:#dce8f6; }
+    .question { border-top:1px solid #38516b; padding-top:9px; margin-top:9px; }
+    #status { font-weight:bold; color:#83f0d0; }
+    .small { font-size:11px; color:#aec3db; }
+    #startMessage { position:fixed; z-index:8; left:50%; top:43%; transform:translate(-50%,-50%); width:calc(100% - 40px); max-width:330px; text-align:center; padding:16px; border-radius:14px; background:rgba(7,22,40,.78); pointer-events:none; }
+    #startMessage .icon { font-size:32px; }
+    @media (max-width:380px) { .brand{font-size:15px} .panel{max-height:36vh;padding:12px} h1{font-size:16px} p{font-size:12px} }
+  </style>
 </head>
 <body>
-<div class="topbar"><div><div class="brand">🧬 BioQuest AR</div><div class="tag">Mission 01 · The ATP Crisis</div></div><div class="pill">CAMERA AR PROTOTYPE</div></div>
-<div class="fallback" id="fallback"><div><div style="font-size:42px">📷</div><h2>Starting your AR camera…</h2><p>Allow camera permission, then point the camera at the Hiro marker.</p></div></div>
-<div class="instructions"><h2>🔍 Find the marker</h2><p>Point your camera at the <strong>Hiro marker</strong>. A 3D Biology object should appear when the marker is recognised.</p><p class="status" id="status" style="margin-top:8px">Waiting for camera and marker…</p></div>
-<a-scene embedded vr-mode-ui="enabled: false" renderer="logarithmicDepthBuffer: true; antialias: true; alpha: true" arjs="sourceType: webcam; debugUIEnabled: false; trackingMethod: best;">
-  <a-marker preset="hiro" id="hiroMarker">
-    <a-entity position="0 0.15 0">
-      <a-sphere position="0 0.15 0" scale="1.0 0.35 0.55" color="#e77d52" material="roughness: 0.65"></a-sphere>
-      <a-torus position="0 0.18 0" rotation="90 0 0" radius="0.38" radius-tubular="0.035" color="#ffe2a8"></a-torus>
-      <a-torus position="-0.3 0.18 0.05" rotation="90 0 0" radius="0.23" radius-tubular="0.03" color="#ffe2a8"></a-torus>
-      <a-torus position="0.28 0.18 -0.04" rotation="90 0 0" radius="0.2" radius-tubular="0.03" color="#ffe2a8"></a-torus>
-      <a-text value="MITOCHONDRION" position="0 0.85 0" align="center" color="#ffffff" width="3.5"></a-text>
-      <a-text value="ATP production" position="0 -0.35 0" align="center" color="#b8f7e6" width="2.5"></a-text>
-    </a-entity>
-  </a-marker>
-  <a-entity camera></a-entity>
-</a-scene>
-<script>
-const marker=document.getElementById('hiroMarker'),status=document.getElementById('status'),fallback=document.getElementById('fallback');
-marker.addEventListener('markerFound',()=>{status.textContent='Marker found! Explore the model.';fallback.style.display='none';});
-marker.addEventListener('markerLost',()=>{status.textContent='Marker not visible — point the camera at it.';fallback.style.display='grid';});
-window.addEventListener('load',()=>setTimeout(()=>{if(status.textContent==='Waiting for camera and marker…')status.textContent='If the camera does not start, check browser permission and HTTPS.';},8000));
-</script>
-</body></html>
+  <div class="header">
+    <div class="brand">🧬 BioQuest AR</div>
+    <div class="sub">Mission 01 · The ATP Crisis</div>
+  </div>
+
+  <div id="startMessage">
+    <div class="icon">📷</div>
+    <strong>Starting camera…</strong>
+    <p>Allow camera access, then point at the printed Hiro marker.</p>
+  </div>
+
+  <div class="panel" aria-live="polite">
+    <div class="eyebrow" id="label">ONE-STATION TEST</div>
+    <h1 id="title">Mitochondrion: The ATP Crisis</h1>
+    <p id="description">Scan the Hiro marker to reveal a 3D mitochondrion. Look for the outer membrane, inner membrane and cristae.</p>
+    <p class="question" id="question"><strong>Evidence question:</strong> Why does the folding of the inner membrane help mitochondria produce ATP?</p>
+    <p id="status">Waiting for camera permission…</p>
+    <p class="small">Keep the entire black-and-white Hiro marker visible, use even lighting, and move your phone slowly. The camera should remain on while you scan.</p>
+  </div>
+
+  <a-scene embedded vr-mode-ui="enabled:false" loading-screen="enabled:false" renderer="antialias:true; alpha:true; colorManagement:true" arjs="sourceType: webcam; trackingMethod: best; detectionMode: mono; debugUIEnabled: false;">
+    <a-marker id="mitochondrionMarker" preset="hiro" smooth="true" smoothCount="5" smoothTolerance="0.02" smoothThreshold="3">
+      <a-entity id="mitochondrion" position="0 0.18 0" scale="0.72 0.72 0.72">
+        <!-- Elongated cutaway body: outer membrane, intermembrane space and matrix -->
+        <a-sphere position="0 0.32 0" scale="1.22 0.38 0.60" color="#8d302f" material="roughness:0.8"></a-sphere>
+        <a-sphere position="0 0.34 0.01" scale="1.13 0.33 0.54" color="#f2b66b" material="roughness:0.85"></a-sphere>
+        <a-sphere position="0 0.36 0.025" scale="1.04 0.275 0.47" color="#d77959" material="roughness:0.85"></a-sphere>
+        <!-- Folded inner membrane / cristae represented as clearly visible ridges -->
+        <a-torus position="-0.72 0.40 0.16" rotation="90 0 0" radius="0.15" radius-tubular="0.035" color="#ffe6a8"></a-torus>
+        <a-torus position="-0.48 0.42 0.20" rotation="90 0 0" radius="0.19" radius-tubular="0.035" color="#ffe6a8"></a-torus>
+        <a-torus position="-0.22 0.43 0.22" rotation="90 0 0" radius="0.21" radius-tubular="0.035" color="#ffe6a8"></a-torus>
+        <a-torus position="0.06 0.43 0.22" rotation="90 0 0" radius="0.21" radius-tubular="0.035" color="#ffe6a8"></a-torus>
+        <a-torus position="0.34 0.42 0.20" rotation="90 0 0" radius="0.19" radius-tubular="0.035" color="#ffe6a8"></a-torus>
+        <a-torus position="0.60 0.40 0.16" rotation="90 0 0" radius="0.15" radius-tubular="0.035" color="#ffe6a8"></a-torus>
+        <!-- Simplified mitochondrial DNA loop and matrix ribosomes -->
+        <a-torus position="0.10 0.47 0.27" rotation="0 0 0" radius="0.10" radius-tubular="0.014" color="#67f0d4"></a-torus>
+        <a-sphere position="-0.55 0.49 0.26" radius="0.035" color="#fff2d6"></a-sphere>
+        <a-sphere position="-0.30 0.50 0.28" radius="0.03" color="#fff2d6"></a-sphere>
+        <a-sphere position="0.38 0.49 0.26" radius="0.035" color="#fff2d6"></a-sphere>
+        <a-sphere position="0.57 0.46 0.24" radius="0.028" color="#fff2d6"></a-sphere>
+        <a-text value="MITOCHONDRION" position="0 1.02 0" align="center" color="#ffffff" width="3.3" side="double"></a-text>
+        <a-text value="Cristae: ATP synthesis" position="0 -0.12 0" align="center" color="#baf9e8" width="2.8" side="double"></a-text>
+      </a-entity>
+    </a-marker>
+    <a-entity camera></a-entity>
+  </a-scene>
+
+  <script>
+    (() => {
+      const start = document.getElementById('startMessage');
+      const status = document.getElementById('status');
+      const label = document.getElementById('label');
+      const title = document.getElementById('title');
+      const description = document.getElementById('description');
+      const question = document.getElementById('question');
+      const scene = document.querySelector('a-scene');
+      const marker = document.getElementById('mitochondrionMarker');
+      let cameraReady = false;
+      let markerVisible = false;
+
+      scene.addEventListener('renderstart', () => {
+        status.textContent = 'AR scene loaded. Starting camera…';
+      });
+      scene.addEventListener('camera-init', () => {
+        cameraReady = true;
+        start.style.display = 'none';
+        status.textContent = 'Camera ready — scan the Hiro marker.';
+      });
+      scene.addEventListener('camera-error', () => {
+        start.style.display = 'block';
+        start.innerHTML = '<div class="icon">⚠️</div><strong>Camera could not start</strong><p>Check browser camera permission, close other apps using the camera, then reload this HTTPS page.</p>';
+        status.textContent = 'Camera error. Reload after checking permission.';
+      });
+      marker.addEventListener('markerFound', () => {
+        markerVisible = true;
+        start.style.display = 'none';
+        label.textContent = 'EVIDENCE FOUND · STATION 1';
+        title.textContent = 'Mitochondrion: The ATP Crisis';
+        description.textContent = 'The inner membrane is folded into cristae. These increase surface area for electron transport and ATP synthesis by oxidative phosphorylation.';
+        question.innerHTML = '<strong>Evidence question:</strong> Explain how a greater inner-membrane surface area can support a higher rate of ATP production, if other factors are equal.';
+        status.textContent = 'Hiro marker detected — record your evidence.';
+      });
+      marker.addEventListener('markerLost', () => {
+        markerVisible = false;
+        if (cameraReady) status.textContent = 'Marker not visible. Camera is still running — bring the whole marker back into view.';
+      });
+      window.addEventListener('error', (e) => console.error('BioQuest error:', e.message));
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && cameraReady && !markerVisible) status.textContent = 'Camera ready — scan the Hiro marker.';
+      });
+      window.setTimeout(() => {
+        if (!cameraReady) status.textContent = 'Still waiting for camera. Confirm permission and open this page over HTTPS.';
+      }, 12000);
+    })();
+  </script>
+</body>
+</html>
