@@ -8,16 +8,18 @@
   <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
   <style>
     * { box-sizing: border-box; }
-    html, body { margin:0; width:100%; height:100%; overflow:hidden; background:transparent; font-family:Arial,sans-serif; color:#fff; }
-    body { position:fixed; inset:0; }
+    html, body { margin:0 !important; padding:0 !important; width:100% !important; min-width:100vw !important; height:100% !important; min-height:100dvh !important; overflow:hidden !important; background:#000; font-family:Arial,sans-serif; color:#fff; }
+    body { position:fixed !important; inset:0 !important; }
     /* Keep the AR scene, camera video, and render canvas aligned on portrait phones. */
     a-scene {
       position: fixed !important;
       inset: 0 !important;
       display: block !important;
       width: 100vw !important;
-      height: 100% !important;
+      min-width: 100vw !important;
+      height: 100vh !important;
       height: 100dvh !important;
+      margin: 0 !important;
       z-index: 0;
       overflow: hidden !important;
     }
@@ -28,7 +30,8 @@
       left: 0 !important;
       display: block !important;
       width: 100vw !important;
-      height: 100% !important;
+      min-width: 100vw !important;
+      height: 100vh !important;
       height: 100dvh !important;
       z-index: 1;
       pointer-events: none;
@@ -41,7 +44,8 @@
       left: 0 !important;
       display: block !important;
       width: 100vw !important;
-      height: 100% !important;
+      min-width: 100vw !important;
+      height: 100vh !important;
       height: 100dvh !important;
       max-width: none !important;
       max-height: none !important;
@@ -127,40 +131,26 @@
       let cameraReady = false;
       let markerVisible = false;
 
-      // AR.js creates the camera video asynchronously; style it after it appears.
+      // Keep the AR viewport tied to the full CSS viewport. Do not assign
+      // pixel widths from window.innerWidth: mobile browsers can report a
+      // layout width smaller than the visible device width, creating a blank strip.
       function fitARViewport() {
-        const width = window.innerWidth;
-        const height = window.innerHeight;
+        scene.style.position = 'fixed';
+        scene.style.inset = '0';
+        scene.style.width = '100vw';
+        scene.style.height = '100dvh';
         const video = document.querySelector('#arjs-video') || document.querySelector('video');
         const canvas = scene.querySelector('canvas');
-
-        if (video) {
-          Object.assign(video.style, {
-            position: 'fixed',
-            top: '0',
-            left: '0',
-            width: width + 'px',
-            height: height + 'px',
-            maxWidth: 'none',
-            maxHeight: 'none',
-            objectFit: 'cover',
-            zIndex: '-2'
-          });
-        }
-
-        if (canvas) {
-          Object.assign(canvas.style, {
-            position: 'fixed',
-            top: '0',
-            left: '0',
-            width: width + 'px',
-            height: height + 'px',
-            pointerEvents: 'none'
-          });
-        }
-
-        scene.style.width = width + 'px';
-        scene.style.height = height + 'px';
+        [video, canvas].forEach((el) => {
+          if (!el) return;
+          el.style.position = 'fixed';
+          el.style.top = '0';
+          el.style.left = '0';
+          el.style.width = '100vw';
+          el.style.height = '100dvh';
+          el.style.maxWidth = 'none';
+          el.style.maxHeight = 'none';
+        });
       }
 
       scene.addEventListener('renderstart', () => {
