@@ -58,77 +58,77 @@
   <div class="panel" aria-live="polite">
     <div class="eyebrow" id="label">ONE-STATION TEST</div>
     <h1 id="title">Mitochondrion: The ATP Crisis</h1>
-    <p id="description">Scan the Hiro marker to reveal a 3D cutaway mitochondrion with its outer membrane, inner membrane, cristae and matrix.</p>
+    <p id="description">Scan the Hiro marker to reveal the imported 3D mitochondrion model.</p>
     <p class="question" id="question"><strong>Evidence question:</strong> Why does the folding of the inner membrane help mitochondria produce ATP?</p>
     <p id="status">Waiting for camera permission…</p>
     <p class="small">Keep the entire black-and-white Hiro marker visible, use even lighting, and move your phone slowly. The camera should remain on while you scan.</p>
   </div>
 
-  <a-scene embedded vr-mode-ui="enabled:false" loading-screen="enabled:false" renderer="antialias:true; alpha:true; colorManagement:true" arjs="sourceType: webcam; trackingMethod: best; detectionMode: mono; debugUIEnabled: false;">
+  <a-scene embedded vr-mode-ui="enabled:false" loading-screen="enabled:false"
+    renderer="antialias:true; alpha:true; colorManagement:true"
+    arjs="sourceType: webcam; trackingMethod: best; detectionMode: mono; debugUIEnabled: false;">
+    <a-assets timeout="60000">
+      <a-asset-item id="mitochondrionAsset" src="./mitochondrion.glb"></a-asset-item>
+    </a-assets>
     <a-marker id="mitochondrionMarker" preset="hiro" smooth="true" smoothCount="5" smoothTolerance="0.02" smoothThreshold="3">
-      <!-- 3D cutaway mitochondrion with visible membrane folds and matrix details. -->
-      <a-entity id="mitochondrion" position="0 0.12 0" rotation="0 0 0" scale="0.36 0.36 0.36" realistic-mitochondrion>
-        <a-text value="OUTER MEMBRANE" position="0.0 1.02 0.72" align="center" color="#ffffff" width="2.8" side="double"></a-text>
-        <a-text value="INNER MEMBRANE / CRISTAE" position="0.0 0.94 -0.72" align="center" color="#baf9e8" width="3.2" side="double"></a-text>
-        <a-text value="MATRIX" position="0.0 0.86 0.0" align="center" color="#fff4d6" width="1.8" side="double"></a-text>
-      </a-entity>
+      <!-- Load the supplied artist-made GLB model; remove all temporary test geometry and 3D text. -->
+      <a-entity id="mitochondrion" position="0 0.48 0" rotation="0 0 0" gltf-model="#mitochondrionAsset" fit-mitochondrion></a-entity>
     </a-marker>
     <a-entity camera></a-entity>
   </a-scene>
 
   <script>
-    // Build the mitochondrion as actual 3D meshes and curved membranes (not a flat image).
-    AFRAME.registerComponent('realistic-mitochondrion', {
+    // Fit the downloaded GLB to the marker and replace the exported UV-checker
+    // material with clean educational colours for each named organelle part.
+    AFRAME.registerComponent('fit-mitochondrion', {
       init: function () {
+        const el = this.el;
         const T = AFRAME.THREE;
-        const root = this.el.object3D;
-        const mat = (color, roughness=0.68, side=T.DoubleSide) => new T.MeshStandardMaterial({color, roughness, side});
-        const add = (geometry, material, position=[0,0,0], scale=[1,1,1], rotation=[0,0,0]) => {
-          const mesh = new T.Mesh(geometry, material);
-          mesh.position.set(...position); mesh.scale.set(...scale); mesh.rotation.set(...rotation);
-          root.add(mesh); return mesh;
-        };
-        // The long axis is horizontal (X). Open the front-facing half so internal structures can be seen.
-        // Full ellipsoid outer membrane, with a translucent warm interior and a visible front cutaway.
-        add(new T.SphereGeometry(1, 64, 40, Math.PI * 1.5, Math.PI, 0, Math.PI), mat(0xb94f43, 0.52), [0,0.52,0], [1.32,0.50,0.60]);
-        // Front cutaway window: dark matrix base, inset within the outer membrane.
-        add(new T.SphereGeometry(1, 64, 32, Math.PI * 1.5, Math.PI, 0, Math.PI), mat(0x8c392f, 0.8), [0,0.51,0.13], [1.15,0.37,0.44]);
-        // Inner membrane floor and several curved, folded cristae arranged across the long axis.
-        add(new T.SphereGeometry(1, 48, 24, Math.PI * 1.5, Math.PI, 0, Math.PI), mat(0xe59a61, 0.65), [0,0.48,0.20], [1.04,0.27,0.34]);
-        const tube = (points, color, radius=0.035) => {
-          const curve = new T.CatmullRomCurve3(points.map(p=>new T.Vector3(...p)), false, 'centripetal');
-          add(new T.TubeGeometry(curve, 32, radius, 8, false), mat(color,0.42));
-        };
-        // Highlight the outer membrane rim around the front-facing cutaway.
-        const rim=[];
-        for(let i=0;i<=96;i++){
-          const a=(i/96)*Math.PI*2;
-          rim.push(new T.Vector3(Math.cos(a)*1.20, 0.52+Math.sin(a)*0.39, 0.48));
-        }
-        add(new T.TubeGeometry(new T.CatmullRomCurve3(rim,true),120,0.035,8,true),mat(0xffc18b,0.4));
-        // Cristae are folded inner-membrane ridges; make each a raised U-shaped fold.
-        for(let i=0;i<7;i++){
-          const x=-0.82+i*0.273;
-          const z=0.17+(i%2)*0.045;
-          tube([[x-0.10,0.46,z],[x-0.10,0.58,z+0.04],[x-0.055,0.67,z+0.07],[x+0.055,0.67,z+0.07],[x+0.10,0.58,z+0.04],[x+0.10,0.46,z]],0xffd18a,0.035);
-          tube([[x-0.07,0.46,z+0.045],[x-0.07,0.56,z+0.07],[x,0.61,z+0.085],[x+0.07,0.56,z+0.07],[x+0.07,0.46,z+0.045]],0xf28b54,0.018);
-        }
-        // Matrix granules and a small mitochondrial DNA loop, visible inside the cutaway.
-        for(let i=0;i<14;i++){
-          const a=i*2.399;
-          add(new T.SphereGeometry(0.025,12,8),mat(0xffe3ac,0.8),[Math.cos(a)*0.68,0.43+(i%3)*0.035,0.36+Math.sin(a)*0.18]);
-        }
-        const dna=[];
-        for(let i=0;i<=64;i++){
-          const a=i/64*Math.PI*2;
-          dna.push(new T.Vector3(0.58+Math.cos(a)*0.10,0.43,0.37+Math.sin(a)*0.055));
-        }
-        add(new T.TubeGeometry(new T.CatmullRomCurve3(dna,true),72,0.012,8,true),mat(0x70e3c4,0.45));
+        el.addEventListener('model-loaded', () => {
+          const model = el.getObject3D('mesh');
+          if (!model) return;
+
+          model.updateMatrixWorld(true);
+          const box = new T.Box3().setFromObject(model);
+          const size = new T.Vector3();
+          const center = new T.Vector3();
+          box.getSize(size);
+          box.getCenter(center);
+          const maxDimension = Math.max(size.x, size.y, size.z) || 1;
+          const fitScale = 0.92 / maxDimension;
+          model.scale.multiplyScalar(fitScale);
+          model.position.x -= center.x * fitScale;
+          model.position.y -= center.y * fitScale;
+          model.position.z -= center.z * fitScale;
+
+          model.traverse((node) => {
+            if (!node.isMesh) return;
+            const name = ((node.name || '') + ' ' + (node.parent && node.parent.name || '')).toLowerCase();
+            let color = 0xe9a06a; // default membrane tone
+            if (name.includes('crista')) color = 0xffd18a;
+            else if (name.includes('matrix')) color = 0xb95c51;
+            else if (name.includes('granule')) color = 0xffe5a8;
+            else if (name.includes('dna')) color = 0x5ad9bd;
+            node.material = new T.MeshStandardMaterial({
+              color,
+              roughness: 0.58,
+              metalness: 0.02,
+              side: T.DoubleSide
+            });
+            node.material.needsUpdate = true;
+          });
+          model.rotation.set(0, 0, 0);
+          model.updateMatrixWorld(true);
+          const status = document.getElementById('status');
+          status.textContent = '3D mitochondrion loaded — inspect the membrane and cristae.';
+        });
+        el.addEventListener('model-error', () => {
+          document.getElementById('status').textContent = '3D model failed to load. Check that mitochondrion.glb is in the same GitHub folder as index.html.';
+        });
       }
     });
 
     (() => {
-      // Re-apply full viewport sizing after AR.js creates its video and canvas.
       function sizeARLayers() {
         const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
         const w = window.visualViewport ? window.visualViewport.width : window.innerWidth;
@@ -159,10 +159,7 @@
       const marker = document.getElementById('mitochondrionMarker');
       let cameraReady = false;
       let markerVisible = false;
-
-      scene.addEventListener('renderstart', () => {
-        status.textContent = 'AR scene loaded. Starting camera…';
-      });
+      scene.addEventListener('renderstart', () => { status.textContent = 'AR scene loaded. Starting camera…'; });
       scene.addEventListener('camera-init', () => {
         cameraReady = true;
         start.style.display = 'none';
@@ -178,9 +175,9 @@
         start.style.display = 'none';
         label.textContent = 'EVIDENCE FOUND · STATION 1';
         title.textContent = 'Mitochondrion: The ATP Crisis';
-        description.textContent = 'Marker detected. Inspect the 3D cutaway: outer membrane, inner membrane, cristae and matrix.';
+        description.textContent = 'Inspect the imported 3D model. Identify the outer membrane, inner membrane, cristae and matrix.';
         question.innerHTML = '<strong>Evidence question:</strong> Explain how a greater inner-membrane surface area can support a higher rate of ATP production, if other factors are equal.';
-        status.textContent = 'Hiro marker detected — record your evidence.';
+        status.textContent = 'Hiro marker detected — loading the 3D model.';
       });
       marker.addEventListener('markerLost', () => {
         markerVisible = false;
