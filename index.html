@@ -21,6 +21,7 @@
     .header { position:fixed; z-index:10; top:0; left:0; right:0; padding:calc(12px + env(safe-area-inset-top)) 14px 12px; background:linear-gradient(#071426eF,#07142680,transparent); pointer-events:none; }
     .brand { font-weight:800; font-size:17px; }
     .sub { margin-top:4px; font-size:12px; color:#c6d8ed; }
+    .credit { margin-top:5px; display:inline-block; padding:4px 8px; border:1px solid rgba(131,240,208,.35); border-radius:999px; background:rgba(7,22,40,.62); color:#83f0d0; font-size:11px; font-weight:700; letter-spacing:.2px; }
     .panel { position:fixed; z-index:20; left:12px; right:12px; bottom:calc(12px + env(safe-area-inset-bottom)); width:auto; max-width:560px; margin-left:auto; margin-right:auto; max-height:34vh; max-height:34dvh; overflow:auto; padding:14px 15px; border:1px solid #46617e; border-radius:16px; background:rgba(7,22,40,.93); box-shadow:0 8px 28px #0005; }
     .eyebrow { font-size:10px; letter-spacing:1px; font-weight:bold; color:#83f0d0; }
     h1 { font-size:18px; margin:6px 0 7px; }
@@ -47,6 +48,7 @@
   <div class="header">
     <div class="brand">🧬 BioQuest AR</div>
     <div class="sub">Mission 01 · The ATP Crisis</div>
+    <div class="credit">AR developed by Mr. Bram</div>
   </div>
 
   <div id="startMessage">
@@ -73,6 +75,17 @@
     <a-marker id="mitochondrionMarker" preset="hiro" smooth="true" smoothCount="5" smoothTolerance="0.02" smoothThreshold="3">
       <!-- Load the supplied artist-made GLB model; remove all temporary test geometry and 3D text. -->
       <a-entity id="mitochondrion" position="0 0.48 0" rotation="0 0 0" gltf-model="#mitochondrionAsset" fit-mitochondrion></a-entity>
+      <!-- Readable AR labels are separate from the imported model, so they stay upright. -->
+      <a-entity id="mitochondrionLabels" visible="true">
+        <a-text value="OUTER MEMBRANE" color="#ffffff" align="left" width="2.5" scale="0.22 0.22 0.22" position="-0.78 1.18 0.22" rotation="0 0 0"></a-text>
+        <a-entity line="start: 0 0 0; end: 0.28 -0.22 -0.12; color: #ffffff; opacity: 0.95" position="-0.35 1.13 0.24"></a-entity>
+        <a-text value="INNER MEMBRANE" color="#8de8ff" align="left" width="2.5" scale="0.22 0.22 0.22" position="-0.78 0.92 0.24" rotation="0 0 0"></a-text>
+        <a-entity line="start: 0 0 0; end: 0.38 -0.20 -0.12; color: #8de8ff; opacity: 0.95" position="-0.35 0.88 0.24"></a-entity>
+        <a-text value="CRISTAE" color="#ffd18a" align="left" width="2.5" scale="0.22 0.22 0.22" position="0.42 0.88 0.34" rotation="0 0 0"></a-text>
+        <a-entity line="start: 0 0 0; end: -0.18 -0.12 -0.16; color: #ffd18a; opacity: 0.95" position="0.42 0.84 0.34"></a-entity>
+        <a-text value="MATRIX" color="#ffb6a7" align="left" width="2.5" scale="0.22 0.22 0.22" position="0.42 0.62 0.34" rotation="0 0 0"></a-text>
+        <a-entity line="start: 0 0 0; end: -0.18 -0.04 -0.16; color: #ffb6a7; opacity: 0.95" position="0.42 0.58 0.34"></a-entity>
+      </a-entity>
     </a-marker>
     <a-entity camera></a-entity>
   </a-scene>
@@ -175,7 +188,7 @@
         start.style.display = 'none';
         label.textContent = 'EVIDENCE FOUND · STATION 1';
         title.textContent = 'Mitochondrion: The ATP Crisis';
-        description.textContent = 'Inspect the imported 3D model. Identify the outer membrane, inner membrane, cristae and matrix.';
+        description.textContent = 'Use the upright AR labels to identify the outer membrane, inner membrane, cristae and matrix.';
         question.innerHTML = '<strong>Evidence question:</strong> Explain how a greater inner-membrane surface area can support a higher rate of ATP production, if other factors are equal.';
         status.textContent = 'Hiro marker detected — loading the 3D model.';
       });
