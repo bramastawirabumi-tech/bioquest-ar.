@@ -83,25 +83,46 @@
       <a-asset-item id="mitochondrionAsset" src="./mitochondrion.glb"></a-asset-item>
     </a-assets>
     <a-marker id="mitochondrionMarker" preset="hiro" smooth="true" smoothCount="5" smoothTolerance="0.02" smoothThreshold="3">
-      <!-- Load the supplied artist-made GLB model; remove all temporary test geometry and 3D text. -->
-      <a-entity id="mitochondrion" position="0 0.48 0" rotation="0 0 0" gltf-model="#mitochondrionAsset" fit-mitochondrion></a-entity>
-      <!-- Labels face the phone camera and sit around the model, not below it. -->
-      <a-entity id="mitochondrionLabels" visible="true">
-        <a-text value="OUTER MEMBRANE" color="#ffffff" align="left" width="2.7" scale="0.22 0.22 0.22" position="-1.00 1.12 0.48" rotation="-90 0 0"></a-text>
-        <a-entity line="start: 0 0 0; end: 0.52 0 -0.18; color: #ffffff; opacity: 1" position="-0.28 1.10 0.45"></a-entity>
-        <a-text value="INNER MEMBRANE" color="#8de8ff" align="left" width="2.7" scale="0.22 0.22 0.22" position="-1.00 1.12 0.18" rotation="-90 0 0"></a-text>
-        <a-entity line="start: 0 0 0; end: 0.60 0 -0.05; color: #8de8ff; opacity: 1" position="-0.28 1.10 0.18"></a-entity>
-        <a-text value="CRISTAE" color="#ffd18a" align="left" width="1.6" scale="0.22 0.22 0.22" position="0.42 1.12 -0.20" rotation="-90 0 0"></a-text>
-        <a-entity line="start: 0 0 0; end: -0.20 0 0.12; color: #ffd18a; opacity: 1" position="0.42 1.10 -0.22"></a-entity>
-        <a-text value="MATRIX" color="#ffb6a7" align="left" width="1.6" scale="0.22 0.22 0.22" position="0.42 1.12 -0.48" rotation="-90 0 0"></a-text>
-        <a-entity line="start: 0 0 0; end: -0.22 0 0.12; color: #ffb6a7; opacity: 1" position="0.42 1.10 -0.47"></a-entity>
-      </a-entity>
+      <!-- Model and callouts share the same rotating parent, so anchors track every rotation/tilt. -->
+      <a-entity id="mitochondrion" position="0 0.48 0" rotation="0 0 0" gltf-model="#mitochondrionAsset" fit-mitochondrion>
+        <a-entity id="mitochondrionLabels" visible="true">
+          <!-- Label text billboards toward the camera; the anchor points and leader lines remain model-relative. -->
+          <a-text value="OUTER MEMBRANE" color="#ffffff" align="center" width="2.8" scale="0.16 0.16 0.16" position="-0.76 0.52 0.28" billboard-text></a-text>
+          <a-entity line="start: 0 0 0; end: 0.30 -0.35 -0.12; color: #ffffff; opacity: 1" position="-0.76 0.47 0.26"></a-entity>
+
+          <a-text value="INNER MEMBRANE" color="#8de8ff" align="center" width="2.8" scale="0.16 0.16 0.16" position="-0.76 -0.48 0.28" billboard-text></a-text>
+          <a-entity line="start: 0 0 0; end: 0.38 0.34 -0.08; color: #8de8ff; opacity: 1" position="-0.76 -0.43 0.26"></a-entity>
+
+          <a-text value="CRISTAE" color="#ffd18a" align="center" width="1.5" scale="0.16 0.16 0.16" position="0.76 -0.43 0.28" billboard-text></a-text>
+          <a-entity line="start: 0 0 0; end: -0.38 0.26 -0.12; color: #ffd18a; opacity: 1" position="0.72 -0.38 0.26"></a-entity>
+
+          <a-text value="MATRIX" color="#ffb6a7" align="center" width="1.5" scale="0.16 0.16 0.16" position="0.76 0.48 0.28" billboard-text></a-text>
+          <a-entity line="start: 0 0 0; end: -0.38 -0.28 -0.12; color: #ffb6a7; opacity: 1" position="0.72 0.43 0.26"></a-entity>
+        </a-entity>
       </a-entity>
     </a-marker>
     <a-entity camera></a-entity>
   </a-scene>
 
   <script>
+    // Keep label text readable from the phone's viewpoint while its position follows the model.
+    AFRAME.registerComponent('billboard-text', {
+      tick: function () {
+        const cameraEl = this.el.sceneEl && this.el.sceneEl.camera && this.el.sceneEl.camera.el;
+        if (!cameraEl) return;
+        const obj = this.el.object3D;
+        const cameraObj = cameraEl.object3D;
+        const worldQuat = new AFRAME.THREE.Quaternion();
+        cameraObj.getWorldQuaternion(worldQuat);
+        if (obj.parent) {
+          const parentWorldQuat = new AFRAME.THREE.Quaternion();
+          obj.parent.getWorldQuaternion(parentWorldQuat);
+          worldQuat.premultiply(parentWorldQuat.invert());
+        }
+        obj.quaternion.copy(worldQuat);
+      }
+    });
+
     // Fit the downloaded GLB to the marker and replace the exported UV-checker
     // material with clean educational colours for each named organelle part.
     AFRAME.registerComponent('fit-mitochondrion', {
@@ -185,7 +206,7 @@
       let modelRotationY = 0;
       let modelRotationX = 0;
       function setModelRotation() {
-        // Rotate only the imported model; keep the labels fixed and camera-facing.
+        // Rotate the model and its attached label anchors together; label text billboards toward the camera.
         mitochondrion.setAttribute('rotation', { x: modelRotationX, y: modelRotationY, z: 0 });
         status.textContent = markerVisible ? 'Model view adjusted — inspect the membranes and cristae.' : 'View adjusted. Scan the Hiro marker to view the model.';
       }
@@ -228,7 +249,7 @@
         start.style.display = 'none';
         label.textContent = 'EVIDENCE FOUND · STATION 1';
         title.textContent = 'Mitochondrion: The ATP Crisis';
-        description.textContent = 'Use the upright AR labels to identify the outer membrane, inner membrane, cristae and matrix.';
+        description.textContent = 'Rotate or tilt the model: its label anchors follow the mitochondrion while the text stays readable.';
         question.innerHTML = '<strong>Evidence question:</strong> Explain how a greater inner-membrane surface area can support a higher rate of ATP production, if other factors are equal.';
         status.textContent = 'Hiro marker detected — loading the 3D model.';
       });
