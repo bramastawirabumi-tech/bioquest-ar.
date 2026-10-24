@@ -66,9 +66,11 @@
     <p id="description">Scan the Hiro marker to reveal the imported 3D mitochondrion model.</p>
     <p class="question" id="question"><strong>Evidence question:</strong> Why does the folding of the inner membrane help mitochondria produce ATP?</p>
     <div class="rotate-controls" aria-label="Rotate mitochondrion model">
-      <button type="button" id="rotateLeft" aria-label="Rotate mitochondrion left">↶ Rotate left</button>
-      <button type="button" id="rotateRight" aria-label="Rotate mitochondrion right">Rotate right ↷</button>
-      <button type="button" id="resetRotation" aria-label="Reset mitochondrion rotation">Reset view</button>
+      <button type="button" id="rotateLeft" aria-label="Rotate mitochondrion left">↶ Left</button>
+      <button type="button" id="rotateRight" aria-label="Rotate mitochondrion right">Right ↷</button>
+      <button type="button" id="rotateUp" aria-label="Tilt mitochondrion up">↑ Tilt up</button>
+      <button type="button" id="rotateDown" aria-label="Tilt mitochondrion down">↓ Tilt down</button>
+      <button type="button" id="resetRotation" aria-label="Reset mitochondrion rotation">Reset</button>
     </div>
     <p id="status">Waiting for camera permission…</p>
     <p class="small">Keep the entire black-and-white Hiro marker visible, use even lighting, and move your phone slowly. The camera should remain on while you scan.</p>
@@ -83,16 +85,17 @@
     <a-marker id="mitochondrionMarker" preset="hiro" smooth="true" smoothCount="5" smoothTolerance="0.02" smoothThreshold="3">
       <!-- Load the supplied artist-made GLB model; remove all temporary test geometry and 3D text. -->
       <a-entity id="mitochondrion" position="0 0.48 0" rotation="0 0 0" gltf-model="#mitochondrionAsset" fit-mitochondrion></a-entity>
-      <!-- Readable AR labels are separate from the imported model, so they stay upright. -->
+      <!-- Labels face the phone camera and sit around the model, not below it. -->
       <a-entity id="mitochondrionLabels" visible="true">
-        <a-text value="OUTER MEMBRANE" color="#ffffff" align="left" width="2.5" scale="0.22 0.22 0.22" position="-0.78 1.18 0.22" rotation="0 0 0"></a-text>
-        <a-entity line="start: 0 0 0; end: 0.28 -0.22 -0.12; color: #ffffff; opacity: 0.95" position="-0.35 1.13 0.24"></a-entity>
-        <a-text value="INNER MEMBRANE" color="#8de8ff" align="left" width="2.5" scale="0.22 0.22 0.22" position="-0.78 0.92 0.24" rotation="0 0 0"></a-text>
-        <a-entity line="start: 0 0 0; end: 0.38 -0.20 -0.12; color: #8de8ff; opacity: 0.95" position="-0.35 0.88 0.24"></a-entity>
-        <a-text value="CRISTAE" color="#ffd18a" align="left" width="2.5" scale="0.22 0.22 0.22" position="0.42 0.88 0.34" rotation="0 0 0"></a-text>
-        <a-entity line="start: 0 0 0; end: -0.18 -0.12 -0.16; color: #ffd18a; opacity: 0.95" position="0.42 0.84 0.34"></a-entity>
-        <a-text value="MATRIX" color="#ffb6a7" align="left" width="2.5" scale="0.22 0.22 0.22" position="0.42 0.62 0.34" rotation="0 0 0"></a-text>
-        <a-entity line="start: 0 0 0; end: -0.18 -0.04 -0.16; color: #ffb6a7; opacity: 0.95" position="0.42 0.58 0.34"></a-entity>
+        <a-text value="OUTER MEMBRANE" color="#ffffff" align="left" width="2.7" scale="0.22 0.22 0.22" position="-1.00 1.12 0.48" rotation="-90 0 0"></a-text>
+        <a-entity line="start: 0 0 0; end: 0.52 0 -0.18; color: #ffffff; opacity: 1" position="-0.28 1.10 0.45"></a-entity>
+        <a-text value="INNER MEMBRANE" color="#8de8ff" align="left" width="2.7" scale="0.22 0.22 0.22" position="-1.00 1.12 0.18" rotation="-90 0 0"></a-text>
+        <a-entity line="start: 0 0 0; end: 0.60 0 -0.05; color: #8de8ff; opacity: 1" position="-0.28 1.10 0.18"></a-entity>
+        <a-text value="CRISTAE" color="#ffd18a" align="left" width="1.6" scale="0.22 0.22 0.22" position="0.42 1.12 -0.20" rotation="-90 0 0"></a-text>
+        <a-entity line="start: 0 0 0; end: -0.20 0 0.12; color: #ffd18a; opacity: 1" position="0.42 1.10 -0.22"></a-entity>
+        <a-text value="MATRIX" color="#ffb6a7" align="left" width="1.6" scale="0.22 0.22 0.22" position="0.42 1.12 -0.48" rotation="-90 0 0"></a-text>
+        <a-entity line="start: 0 0 0; end: -0.22 0 0.12; color: #ffb6a7; opacity: 1" position="0.42 1.10 -0.47"></a-entity>
+      </a-entity>
       </a-entity>
     </a-marker>
     <a-entity camera></a-entity>
@@ -180,10 +183,11 @@
       const marker = document.getElementById('mitochondrionMarker');
       const mitochondrion = document.getElementById('mitochondrion');
       let modelRotationY = 0;
+      let modelRotationX = 0;
       function setModelRotation() {
-        // Rotate the imported model only; keep the AR labels upright and readable.
-        mitochondrion.setAttribute('rotation', { x: 0, y: modelRotationY, z: 0 });
-        status.textContent = markerVisible ? 'Model rotated — scan around it to inspect the structures.' : 'Rotation set. Scan the Hiro marker to view the model.';
+        // Rotate only the imported model; keep the labels fixed and camera-facing.
+        mitochondrion.setAttribute('rotation', { x: modelRotationX, y: modelRotationY, z: 0 });
+        status.textContent = markerVisible ? 'Model view adjusted — inspect the membranes and cristae.' : 'View adjusted. Scan the Hiro marker to view the model.';
       }
       document.getElementById('rotateLeft').addEventListener('click', () => {
         modelRotationY -= 30;
@@ -193,7 +197,16 @@
         modelRotationY += 30;
         setModelRotation();
       });
+      document.getElementById('rotateUp').addEventListener('click', () => {
+        modelRotationX = Math.max(-75, modelRotationX - 15);
+        setModelRotation();
+      });
+      document.getElementById('rotateDown').addEventListener('click', () => {
+        modelRotationX = Math.min(75, modelRotationX + 15);
+        setModelRotation();
+      });
       document.getElementById('resetRotation').addEventListener('click', () => {
+        modelRotationX = 0;
         modelRotationY = 0;
         setModelRotation();
       });
