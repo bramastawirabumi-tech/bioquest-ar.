@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+  <title>BioQuest AR — Cell & Mitochondrion</title>
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin:0; padding:0; width:100%; height:100%; min-width:100%; overflow:hidden; background:#071426; font-family:Arial,sans-serif; color:#fff; }
+    html { position:fixed; inset:0; }
+    body { position:fixed; inset:0; width:100vw; height:100vh; height:100dvh; overflow:hidden; }
+    a-scene { position:fixed !important; inset:0 !important; display:block; width:100vw !important; height:100vh !important; height:100dvh !important; z-index:2 !important; overflow:hidden !important; }
+    #arjs-video, video, .a-canvas, canvas.a-canvas { position:fixed !important; left:0 !important; top:0 !important; width:100vw !important; height:100vh !important; height:100dvh !important; margin:0 !important; }
+    #arjs-video, video { display:block !important; object-fit:cover !important; z-index:0 !important; }
+    .a-canvas, canvas.a-canvas { z-index:2 !important; background:transparent !important; pointer-events:none !important; }
+    .header, .panel, #startMessage { box-sizing:border-box; }
+    .header { position:fixed; z-index:10; top:0; left:0; right:0; padding:calc(12px + env(safe-area-inset-top)) 14px 12px; background:linear-gradient(#071426eF,#07142680,transparent); pointer-events:none; }
+    .brand { font-weight:800; font-size:17px; }
+    .sub { margin-top:4px; font-size:12px; color:#c6d8ed; }
+    .credit { margin-top:5px; display:inline-block; padding:4px 8px; border:1px solid rgba(131,240,208,.35); border-radius:999px; background:rgba(7,22,40,.62); color:#83f0d0; font-size:11px; font-weight:700; letter-spacing:.2px; }
+    .panel { position:fixed; z-index:20; left:12px; right:12px; bottom:calc(12px + env(safe-area-inset-bottom)); width:auto; max-width:560px; margin-left:auto; margin-right:auto; max-height:34vh; max-height:34dvh; overflow:auto; padding:14px 15px; border:1px solid #46617e; border-radius:16px; background:rgba(7,22,40,.93); box-shadow:0 8px 28px #0005; }
+    .eyebrow { font-size:10px; letter-spacing:1px; font-weight:bold; color:#83f0d0; }
+    h1 { font-size:18px; margin:6px 0 7px; }
+    p { font-size:13px; line-height:1.45; margin:6px 0; color:#dce8f6; }
+    .question { border-top:1px solid #38516b; padding-top:9px; margin-top:9px; }
+    .rotate-controls { display:flex; gap:8px; flex-wrap:wrap; margin:9px 0 6px; }
+    .rotate-controls button { flex:1; min-width:84px; border:1px solid #4c7892; border-radius:10px; padding:9px 10px; background:#17344b; color:#f4fbff; font-weight:700; font-size:12px; touch-action:manipulation; }
+    .rotate-controls button:active { background:#24536b; transform:scale(.98); }
+    #status { font-weight:bold; color:#83f0d0; }
+    .small { font-size:11px; color:#aec3db; }
+    #startMessage { position:fixed; z-index:15; left:50%; top:43%; transform:translate(-50%,-50%); width:calc(100% - 40px); max-width:330px; text-align:center; padding:16px; border-radius:14px; background:rgba(7,22,40,.78); pointer-events:none; }
+    #startMessage .icon { font-size:32px; }
+    @media (max-width:600px) {
+      .header { padding:calc(10px + env(safe-area-inset-top)) 12px 8px; }
+      .brand { font-size:15px; }
+      .sub { font-size:11px; }
+      .panel { left:10px; right:10px; bottom:calc(10px + env(safe-area-inset-bottom)); max-height:31vh; max-height:31dvh; padding:11px 12px; }
+      h1 { font-size:16px; }
+      p { font-size:12px; line-height:1.35; }
+      .small { font-size:10px; }
+      #startMessage { top:45%; width:calc(100% - 32px); }
+    }
+    @media (max-height:650px) { .panel { max-height:28vh; max-height:28dvh; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="brand">🧬 BioQuest AR</div>
+    <div class="sub">Mission 01 · The ATP Crisis · Two-marker mode</div>
+    <div class="credit">AR developed by Mr. Bram</div>
+  </div>
+
+  <div id="startMessage">
+    <div class="icon">📷</div>
+    <strong>Starting camera…</strong>
+    <p>Allow camera access. At the basketball court, scan the KANJI marker for the whole cell. At the pool pillars, scan the HIRO marker for the mitochondrion.</p>
+  </div>
+
+  <div class="panel" aria-live="polite">
+    <div class="eyebrow" id="label">BIOQUEST SCANNER READY</div>
+    <h1 id="title">The Cell-to-ATP Mystery</h1>
+    <p id="description">This is one AR website for both locations. Scan the Kanji marker to reveal the whole cell, or the Hiro marker to reveal the mitochondrion.</p>
+    <p class="question" id="question"><strong>Mission:</strong> Follow the trail from the whole cell to the mitochondrion and collect evidence explaining how ATP is produced.</p>
+    <div class="rotate-controls" aria-label="Rotate the currently detected model">
+      <button type="button" id="rotateLeft" aria-label="Rotate model left">↶ Left</button>
+      <button type="button" id="rotateRight" aria-label="Rotate model right">Right ↷</button>
+      <button type="button" id="rotateUp" aria-label="Tilt model up">↑ Tilt up</button>
+      <button type="button" id="rotateDown" aria-label="Tilt model down">↓ Tilt down</button>
+      <button type="button" id="resetRotation" aria-label="Reset model rotation">Reset</button>
+    </div>
+    <p id="status">Waiting for camera permission…</p>
+    <p class="small">Keep the whole marker inside the camera view, use good lighting, and move your phone slowly. Keep this webpage open as your team moves between stations.</p>
+  </div>
+
+  <a-scene embedded vr-mode-ui="enabled:false" loading-screen="enabled:false"
+    renderer="antialias:true; alpha:true; colorManagement:true"
+    arjs="sourceType: webcam; trackingMethod: best; detectionMode: mono; debugUIEnabled: false;">
+    <a-assets timeout="120000">
+      <a-asset-item id="mitochondrionAsset" src="./mitochondrion.glb"></a-asset-item>
+      <a-asset-item id="cellAsset" src="./cell.glb"></a-asset-item>
+    </a-assets>
+
+    <!-- STATION 2: Keep the existing HIRO marker for the mitochondrion. -->
+    <a-marker id="mitochondrionMarker" preset="hiro" emitevents="true" smooth="true" smoothCount="5" smoothTolerance="0.02" smoothThreshold="3">
+      <a-entity id="mitochondrion" position="0 0.48 0" rotation="0 0 0" gltf-model="#mitochondrionAsset" fit-mitochondrion></a-entity>
+    </a-marker>
+
+    <!-- STATION 1: Use the distinct KANJI marker for the whole cell. -->
+    <a-marker id="cellMarker" preset="kanji" emitevents="true" smooth="true" smoothCount="5" smoothTolerance="0.02" smoothThreshold="3">
+      <a-entity id="cellModel" position="0 0.48 0" rotation="0 0 0" gltf-model="#cellAsset" fit-cell></a-entity>
+    </a-marker>
+
+    <a-entity camera></a-entity>
+  </a-scene>
+
+  <script>
+    // Fit the mitochondrion model to a readable size and apply educational colors.
+    AFRAME.registerComponent('fit-mitochondrion', {
+      init: function () {
+        const el = this.el;
+        const T = AFRAME.THREE;
+        el.addEventListener('model-loaded', () => {
+          const model = el.getObject3D('mesh');
+          if (!model) return;
+          model.updateMatrixWorld(true);
+          const box = new T.Box3().setFromObject(model);
+          const size = new T.Vector3();
+          const center = new T.Vector3();
+          box.getSize(size);
+          box.getCenter(center);
+          const maxDimension = Math.max(size.x, size.y, size.z) || 1;
+          const fitScale = 0.92 / maxDimension;
+          model.scale.multiplyScalar(fitScale);
+          model.position.x -= center.x * fitScale;
+          model.position.y -= center.y * fitScale;
+          model.position.z -= center.z * fitScale;
+          model.traverse((node) => {
+            if (!node.isMesh) return;
+            const name = ((node.name || '') + ' ' + (node.parent && node.parent.name || '')).toLowerCase();
+            let color = 0xe9a06a;
+            if (name.includes('crista')) color = 0xffd18a;
+            else if (name.includes('matrix')) color = 0xb95c51;
+            else if (name.includes('granule')) color = 0xffe5a8;
+            else if (name.includes('dna')) color = 0x5ad9bd;
+            node.material = new T.MeshStandardMaterial({ color, roughness: 0.58, metalness: 0.02, side: T.DoubleSide });
+            node.material.needsUpdate = true;
+          });
+          model.rotation.set(0, 0, 0);
+          model.updateMatrixWorld(true);
+        });
+        el.addEventListener('model-error', () => {
+          const activeKind = window.bioQuestActiveKind;
+          if (activeKind === 'mitochondrion') document.getElementById('status').textContent = 'Mitochondrion model failed to load. Check that mitochondrion.glb is in the same GitHub folder as index.html.';
+        });
+      }
+    });
+
+    // Fit the whole-cell model while preserving its original material colours.
+    AFRAME.registerComponent('fit-cell', {
+      init: function () {
+        const el = this.el;
+        const T = AFRAME.THREE;
+        el.addEventListener('model-loaded', () => {
+          const model = el.getObject3D('mesh');
+          if (!model) return;
+          model.updateMatrixWorld(true);
+          const box = new T.Box3().setFromObject(model);
+          const size = new T.Vector3();
+          const center = new T.Vector3();
+          box.getSize(size);
+          box.getCenter(center);
+          const maxDimension = Math.max(size.x, size.y, size.z) || 1;
+          const fitScale = 0.92 / maxDimension;
+          model.scale.multiplyScalar(fitScale);
+          model.position.x -= center.x * fitScale;
+          model.position.y -= center.y * fitScale;
+          model.position.z -= center.z * fitScale;
+          model.updateMatrixWorld(true);
+        });
+        el.addEventListener('model-error', () => {
+          const activeKind = window.bioQuestActiveKind;
+          if (activeKind === 'cell') document.getElementById('status').textContent = 'Cell model failed to load. Upload your whole-cell model as cell.glb beside index.html.';
+        });
+      }
+    });
+
+    (() => {
+      function sizeARLayers() {
+        const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        const w = window.visualViewport ? window.visualViewport.width : window.innerWidth;
+        document.documentElement.style.width = w + 'px';
+        document.documentElement.style.height = h + 'px';
+        document.body.style.width = w + 'px';
+        document.body.style.height = h + 'px';
+        document.querySelectorAll('#arjs-video, video, .a-canvas, canvas.a-canvas, a-scene').forEach(el => {
+          el.style.setProperty('left', '0', 'important');
+          el.style.setProperty('top', '0', 'important');
+          el.style.setProperty('width', w + 'px', 'important');
+          el.style.setProperty('height', h + 'px', 'important');
+        });
+      }
+      sizeARLayers();
+      window.addEventListener('resize', sizeARLayers);
+      window.addEventListener('orientationchange', () => setTimeout(sizeARLayers, 250));
+      if (window.visualViewport) window.visualViewport.addEventListener('resize', sizeARLayers);
+      const layerObserver = new MutationObserver(sizeARLayers);
+      layerObserver.observe(document.body, { childList: true, subtree: true });
+
+      const start = document.getElementById('startMessage');
+      const status = document.getElementById('status');
+      const label = document.getElementById('label');
+      const title = document.getElementById('title');
+      const description = document.getElementById('description');
+      const question = document.getElementById('question');
+      const scene = document.querySelector('a-scene');
+      const markers = {
+        cell: document.getElementById('cellMarker'),
+        mitochondrion: document.getElementById('mitochondrionMarker')
+      };
+      const models = {
+        cell: document.getElementById('cellModel'),
+        mitochondrion: document.getElementById('mitochondrion')
+      };
+      const markerVisible = { cell: false, mitochondrion: false };
+      const rotation = {
+        cell: { x: 0, y: 0 },
+        mitochondrion: { x: 0, y: 0 }
+      };
+      let activeKind = null;
+      let cameraReady = false;
+      window.bioQuestActiveKind = null;
+
+      const content = {
+        cell: {
+          label: 'STATION 1 · CELL DISCOVERED · KANJI MARKER',
+          title: 'Whole Cell: Find the Powerhouse',
+          description: 'Rotate or tilt the cell model. Locate the mitochondrion and record your evidence before following the next clue.',
+          question: '<strong>Evidence question:</strong> Which organelle is the main site of aerobic respiration and most ATP production in eukaryotic cells?'
+        },
+        mitochondrion: {
+          label: 'STATION 2 · MITOCHONDRION DISCOVERED · HIRO MARKER',
+          title: 'Mitochondrion: The ATP Crisis',
+          description: 'Rotate or tilt the mitochondrion to inspect its outer membrane, inner membrane, cristae and matrix.',
+          question: '<strong>Evidence question:</strong> Explain how the inner membrane and proton gradient support ATP synthesis during oxidative phosphorylation.'
+        }
+      };
+
+      function updateStatusForActive() {
+        if (activeKind) {
+          status.textContent = activeKind === 'cell'
+            ? 'Kanji marker detected — whole-cell model selected.'
+            : 'Hiro marker detected — mitochondrion model selected.';
+        } else if (cameraReady) {
+          status.textContent = 'Camera ready — scan Kanji for the cell or Hiro for the mitochondrion.';
+        }
+      }
+      function activate(kind) {
+        activeKind = kind;
+        window.bioQuestActiveKind = kind;
+        start.style.display = 'none';
+        label.textContent = content[kind].label;
+        title.textContent = content[kind].title;
+        description.textContent = content[kind].description;
+        question.innerHTML = content[kind].question;
+        updateStatusForActive();
+      }
+      function lost(kind) {
+        markerVisible[kind] = false;
+        if (activeKind === kind) {
+          const other = kind === 'cell' ? 'mitochondrion' : 'cell';
+          activeKind = markerVisible[other] ? other : null;
+          window.bioQuestActiveKind = activeKind;
+          if (activeKind) {
+            label.textContent = content[activeKind].label;
+            title.textContent = content[activeKind].title;
+            description.textContent = content[activeKind].description;
+            question.innerHTML = content[activeKind].question;
+          } else {
+            label.textContent = 'BIOQUEST SCANNER READY';
+            title.textContent = 'The Cell-to-ATP Mystery';
+            description.textContent = 'Marker not visible. Keep this page open and move the whole printed marker back into camera view.';
+            question.innerHTML = '<strong>Mission:</strong> Scan the Kanji marker at the basketball court for the cell, or the Hiro marker by the pool for the mitochondrion.';
+          }
+        }
+        updateStatusForActive();
+      }
+
+      for (const kind of Object.keys(markers)) {
+        markers[kind].addEventListener('markerFound', () => {
+          markerVisible[kind] = true;
+          activate(kind);
+        });
+        markers[kind].addEventListener('markerLost', () => lost(kind));
+      }
+
+      function setModelRotation() {
+        if (!activeKind) {
+          status.textContent = 'First scan a marker, then use the rotation controls.';
+          return;
+        }
+        models[activeKind].setAttribute('rotation', {
+          x: rotation[activeKind].x,
+          y: rotation[activeKind].y,
+          z: 0
+        });
+        status.textContent = activeKind === 'cell'
+          ? 'Cell view adjusted — inspect the organelles.'
+          : 'Mitochondrion view adjusted — inspect the membranes and cristae.';
+      }
+      document.getElementById('rotateLeft').addEventListener('click', () => {
+        if (!activeKind) return setModelRotation();
+        rotation[activeKind].y -= 30;
+        setModelRotation();
+      });
+      document.getElementById('rotateRight').addEventListener('click', () => {
+        if (!activeKind) return setModelRotation();
+        rotation[activeKind].y += 30;
+        setModelRotation();
+      });
+      document.getElementById('rotateUp').addEventListener('click', () => {
+        if (!activeKind) return setModelRotation();
+        rotation[activeKind].x = Math.max(-75, rotation[activeKind].x - 15);
+        setModelRotation();
+      });
+      document.getElementById('rotateDown').addEventListener('click', () => {
+        if (!activeKind) return setModelRotation();
+        rotation[activeKind].x = Math.min(75, rotation[activeKind].x + 15);
+        setModelRotation();
+      });
+      document.getElementById('resetRotation').addEventListener('click', () => {
+        if (!activeKind) return setModelRotation();
+        rotation[activeKind] = { x: 0, y: 0 };
+        setModelRotation();
+      });
+
+      scene.addEventListener('renderstart', () => { status.textContent = 'AR scene loaded. Starting camera…'; });
+      scene.addEventListener('camera-init', () => {
+        cameraReady = true;
+        start.style.display = 'none';
+        updateStatusForActive();
+      });
+      scene.addEventListener('camera-error', () => {
+        start.style.display = 'block';
+        start.innerHTML = '<div class="icon">⚠️</div><strong>Camera could not start</strong><p>Check browser camera permission, close other apps using the camera, then reload this HTTPS page.</p>';
+        status.textContent = 'Camera error. Reload after checking permission.';
+      });
+      window.addEventListener('error', (e) => console.error('BioQuest error:', e.message));
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && cameraReady && !activeKind) updateStatusForActive();
+      });
+      window.setTimeout(() => {
+        if (!cameraReady) status.textContent = 'Still waiting for camera. Confirm permission and open this page over HTTPS.';
+      }, 12000);
+    })();
+  </script>
+</body>
+</html>
