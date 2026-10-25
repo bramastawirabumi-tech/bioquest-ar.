@@ -48,20 +48,20 @@
 <body>
   <div class="header">
     <div class="brand">🧬 BioQuest AR</div>
-    <div class="sub">Mission 01 · The ATP Crisis · Two-marker mode</div>
+    <div class="sub">Mission 01 · The ATP Crisis · Three-station mode</div>
     <div class="credit">AR developed by Mr. Bram</div>
   </div>
 
   <div id="startMessage">
     <div class="icon">📷</div>
     <strong>Starting camera…</strong>
-    <p>Allow camera access. At the basketball court, scan the KANJI marker for the whole cell. At the pool pillars, scan the HIRO marker for the mitochondrion.</p>
+    <p>Allow camera access. Scan KANJI for the whole cell, HIRO for the mitochondrion, or barcode marker 0 for the electron transport chain.</p>
   </div>
 
   <div class="panel" aria-live="polite">
     <div class="eyebrow" id="label">BIOQUEST SCANNER READY</div>
     <h1 id="title">The Cell-to-ATP Mystery</h1>
-    <p id="description">This is one AR website for both locations. Scan the Kanji marker to reveal the whole cell, or the Hiro marker to reveal the mitochondrion.</p>
+    <p id="description">Scan KANJI for the whole cell, HIRO for the mitochondrion, or barcode marker 0 for the electron transport chain model.</p>
     <p class="question" id="question"><strong>Mission:</strong> Follow the trail from the whole cell to the mitochondrion and collect evidence explaining how ATP is produced.</p>
     <div class="rotate-controls" aria-label="Rotate the currently detected model">
       <button type="button" id="rotateLeft" aria-label="Rotate model left">↶ Left</button>
@@ -80,11 +80,17 @@
     <a-assets timeout="120000">
       <a-asset-item id="mitochondrionAsset" src="./mitochondrion.glb"></a-asset-item>
       <a-asset-item id="cellAsset" src="./cell.glb"></a-asset-item>
+      <a-asset-item id="etcAsset" src="./mitochondrial_etc_free_schematic.glb"></a-asset-item>
     </a-assets>
 
     <!-- STATION 2: Keep the existing HIRO marker for the mitochondrion. -->
     <a-marker id="mitochondrionMarker" preset="hiro" emitevents="true" smooth="true" smoothCount="5" smoothTolerance="0.02" smoothThreshold="3">
       <a-entity id="mitochondrion" position="0 0.48 0" rotation="0 0 0" gltf-model="#mitochondrionAsset" fit-mitochondrion></a-entity>
+    </a-marker>
+
+    <!-- STATION 3: Print an AR.js barcode marker with value 0 for the ETC model. -->
+    <a-marker id="etcMarker" type="barcode" value="0" emitevents="true" smooth="true" smoothCount="5" smoothTolerance="0.02" smoothThreshold="3">
+      <a-entity id="etcModel" position="0 0.48 0" rotation="0 0 0" gltf-model="#etcAsset" fit-etc></a-entity>
     </a-marker>
 
     <!-- STATION 1: Use the distinct KANJI marker for the whole cell. -->
@@ -133,6 +139,35 @@
         el.addEventListener('model-error', () => {
           const activeKind = window.bioQuestActiveKind;
           if (activeKind === 'mitochondrion') document.getElementById('status').textContent = 'Mitochondrion model failed to load. Check that mitochondrion.glb is in the same GitHub folder as index.html.';
+        });
+      }
+    });
+
+    // Fit the simplified ETC schematic to a readable size.
+    AFRAME.registerComponent('fit-etc', {
+      init: function () {
+        this.el.addEventListener('model-loaded', () => {
+          const model = this.el.getObject3D('mesh');
+          if (!model) return;
+          const T = AFRAME.THREE;
+          model.updateMatrixWorld(true);
+          const box = new T.Box3().setFromObject(model);
+          const size = new T.Vector3();
+          const center = new T.Vector3();
+          box.getSize(size);
+          box.getCenter(center);
+          const maxDimension = Math.max(size.x, size.y, size.z) || 1;
+          const fitScale = 0.92 / maxDimension;
+          model.scale.multiplyScalar(fitScale);
+          model.position.x -= center.x * fitScale;
+          model.position.y -= center.y * fitScale;
+          model.position.z -= center.z * fitScale;
+          model.updateMatrixWorld(true);
+        });
+        this.el.addEventListener('model-error', () => {
+          if (window.bioQuestActiveKind === 'etc') {
+            document.getElementById('status').textContent = 'ETC model failed to load. Upload mitochondrial_etc_free_schematic.glb beside index.html.';
+          }
         });
       }
     });
@@ -197,16 +232,19 @@
       const scene = document.querySelector('a-scene');
       const markers = {
         cell: document.getElementById('cellMarker'),
-        mitochondrion: document.getElementById('mitochondrionMarker')
+        mitochondrion: document.getElementById('mitochondrionMarker'),
+        etc: document.getElementById('etcMarker')
       };
       const models = {
         cell: document.getElementById('cellModel'),
-        mitochondrion: document.getElementById('mitochondrion')
+        mitochondrion: document.getElementById('mitochondrion'),
+        etc: document.getElementById('etcModel')
       };
-      const markerVisible = { cell: false, mitochondrion: false };
+      const markerVisible = { cell: false, mitochondrion: false, etc: false };
       const rotation = {
         cell: { x: 0, y: 0 },
-        mitochondrion: { x: 0, y: 0 }
+        mitochondrion: { x: 0, y: 0 },
+        etc: { x: 0, y: 0 }
       };
       let activeKind = null;
       let cameraReady = false;
@@ -224,6 +262,12 @@
           title: 'Mitochondrion: The ATP Crisis',
           description: 'Rotate or tilt the mitochondrion to inspect its outer membrane, inner membrane, cristae and matrix.',
           question: '<strong>Evidence question:</strong> Explain how the inner membrane and proton gradient support ATP synthesis during oxidative phosphorylation.'
+        },
+        etc: {
+          label: 'STATION 3 · ELECTRON TRANSPORT CHAIN · BARCODE 0',
+          title: 'Follow the Electrons',
+          description: 'Inspect the simplified schematic of the electron transport chain in the inner mitochondrial membrane.',
+          question: '<strong>Evidence question:</strong> Explain how electron transfer provides energy for proton pumping, and how the proton gradient drives ATP synthase. What is the role of oxygen?'
         }
       };
 
@@ -231,7 +275,9 @@
         if (activeKind) {
           status.textContent = activeKind === 'cell'
             ? 'Kanji marker detected — whole-cell model selected.'
-            : 'Hiro marker detected — mitochondrion model selected.';
+            : activeKind === 'mitochondrion'
+              ? 'Hiro marker detected — mitochondrion model selected.'
+              : 'Barcode marker 0 detected — electron transport chain model selected.';
         } else if (cameraReady) {
           status.textContent = 'Camera ready — scan Kanji for the cell or Hiro for the mitochondrion.';
         }
@@ -249,8 +295,9 @@
       function lost(kind) {
         markerVisible[kind] = false;
         if (activeKind === kind) {
-          const other = kind === 'cell' ? 'mitochondrion' : 'cell';
-          activeKind = markerVisible[other] ? other : null;
+          const otherKinds = ['cell', 'mitochondrion', 'etc'].filter(k => k !== kind && markerVisible[k]);
+          const other = otherKinds.length ? otherKinds[0] : null;
+          activeKind = other;
           window.bioQuestActiveKind = activeKind;
           if (activeKind) {
             label.textContent = content[activeKind].label;
@@ -261,7 +308,7 @@
             label.textContent = 'BIOQUEST SCANNER READY';
             title.textContent = 'The Cell-to-ATP Mystery';
             description.textContent = 'Marker not visible. Keep this page open and move the whole printed marker back into camera view.';
-            question.innerHTML = '<strong>Mission:</strong> Scan the Kanji marker at the basketball court for the cell, or the Hiro marker by the pool for the mitochondrion.';
+            question.innerHTML = '<strong>Mission:</strong> Scan Kanji for the whole cell, Hiro for the mitochondrion, or barcode marker 0 for the electron transport chain.';
           }
         }
         updateStatusForActive();
@@ -287,7 +334,9 @@
         });
         status.textContent = activeKind === 'cell'
           ? 'Cell view adjusted — inspect the organelles.'
-          : 'Mitochondrion view adjusted — inspect the membranes and cristae.';
+          : activeKind === 'mitochondrion'
+            ? 'Mitochondrion view adjusted — inspect the membranes and cristae.'
+            : 'ETC view adjusted — trace electrons, proton pumping and ATP synthesis.';
       }
       document.getElementById('rotateLeft').addEventListener('click', () => {
         if (!activeKind) return setModelRotation();
