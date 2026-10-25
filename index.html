@@ -30,7 +30,9 @@
     .rotate-controls button:active { background:#24536b; transform:scale(.98); }
     #status { font-weight:bold; color:#83f0d0; }
     .small { font-size:11px; color:#aec3db; }
-    #startMessage { position:fixed; z-index:15; left:50%; top:43%; transform:translate(-50%,-50%); width:calc(100% - 40px); max-width:330px; text-align:center; padding:16px; border-radius:14px; background:rgba(7,22,40,.78); pointer-events:none; }
+    #startMessage { position:fixed; z-index:15; left:50%; top:42%; transform:translate(-50%,-50%); width:calc(100% - 32px); max-width:330px; max-height:30dvh; overflow:auto; text-align:center; padding:14px; border-radius:14px; background:rgba(7,22,40,.82); pointer-events:none; }
+    #startMessage p { margin-bottom:0; }
+    #startMessage.error { border:1px solid #f4a6a6; background:rgba(45,12,20,.9); }
     #startMessage .icon { font-size:32px; }
     @media (max-width:600px) {
       .header { padding:calc(10px + env(safe-area-inset-top)) 12px 8px; }
@@ -70,7 +72,7 @@
       <button type="button" id="rotateDown" aria-label="Tilt model down">↓ Tilt down</button>
       <button type="button" id="resetRotation" aria-label="Reset model rotation">Reset</button>
     </div>
-    <p id="status">Waiting for camera permission…</p>
+    <p id="status">Connecting to camera…</p>
     <p class="small">Keep the whole marker inside the camera view, use good lighting, and move your phone slowly. Keep this webpage open as your team moves between stations.</p>
   </div>
 
@@ -363,24 +365,65 @@
         setModelRotation();
       });
 
-      scene.addEventListener('renderstart', () => { status.textContent = 'AR scene loaded. Starting camera…'; });
-      scene.addEventListener('camera-init', () => {
+      function markCameraReady() {
+        if (cameraReady) return;
         cameraReady = true;
         start.style.display = 'none';
+        start.classList.remove('error');
         updateStatusForActive();
-      });
-      scene.addEventListener('camera-error', () => {
+      }
+
+      function showCameraError(message) {
         start.style.display = 'block';
-        start.innerHTML = '<div class="icon">⚠️</div><strong>Camera could not start</strong><p>Check browser camera permission, close other apps using the camera, then reload this HTTPS page.</p>';
-        status.textContent = 'Camera error. Reload after checking permission.';
+        start.classList.add('error');
+        start.innerHTML = '<div class="icon">⚠️</div><strong>Camera could not start</strong><p>' + message + '</p>';
+        status.textContent = 'Camera error — check permission, then reload this page.';
+      }
+
+      scene.addEventListener('renderstart', () => {
+        status.textContent = 'AR scene loaded — connecting to camera…';
       });
+      scene.addEventListener('camera-init', markCameraReady);
+      scene.addEventListener('camera-error', () => {
+        showCameraError('Allow camera access in your browser settings. Close other apps using the camera, then reload this HTTPS page.');
+      });
+
+      // AR.js versions/browsers differ in where they emit camera-init.
+      // A real, playing video stream is also a reliable signal that the camera works.
+      function watchCameraVideo() {
+        const videos = document.querySelectorAll('#arjs-video, video');
+        videos.forEach((video) => {
+          video.setAttribute('playsinline', '');
+          video.setAttribute('webkit-playsinline', '');
+          video.muted = true;
+          video.addEventListener('playing', markCameraReady, { once: true });
+          video.addEventListener('loadeddata', () => {
+            if (video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) {
+              markCameraReady();
+            }
+          }, { once: true });
+          if (!video.paused && video.readyState >= 2 && video.videoWidth > 0) {
+            markCameraReady();
+          }
+        });
+      }
+      watchCameraVideo();
+      const cameraVideoObserver = new MutationObserver(watchCameraVideo);
+      cameraVideoObserver.observe(document.body, { childList: true, subtree: true });
+
       window.addEventListener('error', (e) => console.error('BioQuest error:', e.message));
       document.addEventListener('visibilitychange', () => {
         if (!document.hidden && cameraReady && !activeKind) updateStatusForActive();
       });
+
       window.setTimeout(() => {
-        if (!cameraReady) status.textContent = 'Still waiting for camera. Confirm permission and open this page over HTTPS.';
-      }, 12000);
+        if (!cameraReady) {
+          status.textContent = 'Camera has not started yet. Check site camera permission and reload.';
+          start.style.display = 'block';
+          start.classList.add('error');
+          start.innerHTML = '<div class="icon">📷</div><strong>Waiting for camera permission</strong><p>Tap the site controls beside the address bar, allow Camera, then reload. Make sure the page is opened using HTTPS.</p>';
+        }
+      }, 10000);
     })();
   </script>
 </body>
